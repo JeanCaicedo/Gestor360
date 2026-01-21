@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: gestor360-postgres
+    environment:
+      POSTGRES_USER: gestor360
+      POSTGRES_PASSWORD: gestor360
+      POSTGRES_DB: gestor360
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: gestor360-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:

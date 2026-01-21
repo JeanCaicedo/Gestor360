@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url      = env("DATABASE_URL") //
+}
+
+enum UserRole {
+  ADMIN
+  RESIDENT
+  SECURITY
+  MODERATOR
+}
+
+enum ReservationStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum VisitStatus {
+  PENDING
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+}
+
+enum VisitEventAction {
+  CHECK_IN
+  CHECK_OUT
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  fullName      String
+  role          UserRole @default(RESIDENT)
+  isActive      Boolean  @default(true)
+  refreshToken  String?  // hash del refresh token (recomendado)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reservations  Reservation[]
+  hostedVisits  Visit[] @relation("VisitHost")
+  visitEvents   VisitEvent[] @relation("VisitEventPerformedBy")
+}
+
+model Amenity {
+  id         String   @id @default(uuid())
+  name       String
+  type       String
+  capacity   Int?
+  rulesJson  Json?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  reservations Reservation[]
+}
+
+model Reservation {
+  id         String            @id @default(uuid())
+  amenityId  String
+  userId     String
+  startAt    DateTime
+  endAt      DateTime
+  status     ReservationStatus @default(ACTIVE)
+  notes      String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  amenity    Amenity @relation(fields: [amenityId], references: [id])
+  user       User    @relation(fields: [userId], references: [id])
+
+  @@index([amenityId, startAt, endAt])
+  @@index([userId, startAt])
+}
+
+model Visit {
+  id          String      @id @default(uuid())
+  hostUserId  String
+  visitorName String
+  visitorDoc  String?
+  expectedAt  DateTime
+  status      VisitStatus @default(PENDING)
+  qrToken     String      @unique
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  host        User        @relation("VisitHost", fields: [hostUserId], references: [id])
+  events      VisitEvent[]
+}
+
+model VisitEvent {
+  id          String           @id @default(uuid())
+  visitId     String
+  action      VisitEventAction
+  performedBy String
+  at          DateTime         @default(now())
+
+  visit       Visit @relation(fields: [visitId], references: [id])
+  user        User  @relation("VisitEventPerformedBy", fields: [performedBy], references: [id])
+
+  @@index([visitId, at])
+}

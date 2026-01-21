@@ -1,0 +1,14 @@
+{
+  "name": "gestor360",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w @gestor360/web",
+    "dev:api": "npm run start:dev -w @gestor360/api",
+    "lint": "npm run lint -ws",
+    "test": "npm run test -ws"
+  }
+}
